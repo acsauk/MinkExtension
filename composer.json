@@ -1,5 +1,5 @@
 {
-    "name": "friends-of-behat/mink-extension",
+    "name": "acsauk/mink-extension",
     "type": "behat-extension",
     "description": "Mink extension for Behat",
     "keywords": [
