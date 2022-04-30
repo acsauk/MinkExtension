@@ -12,6 +12,7 @@ namespace Behat\MinkExtension\ServiceContainer\Driver;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\Definition;
+use Throwable;
 
 /**
  * @author Christophe Coevoet <stof@notk.org>
@@ -114,7 +115,11 @@ class GoutteFactory implements DriverFactory
 
     private function isGoutte1()
     {
-        $refl = new \ReflectionParameter(array('Goutte\Client', 'setClient'), 0);
+        try {
+            $refl = new \ReflectionParameter(array('Goutte\Client', 'setClient'), 0);
+        } catch (Throwable $e) {
+            return false;
+        }
 
         $type = $refl->getType();
         if ($type instanceof \ReflectionNamedType && 'Guzzle\Http\ClientInterface' === $type->getName()) {
