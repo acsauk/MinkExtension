@@ -10,6 +10,8 @@
 
 namespace Behat\MinkExtension\ServiceContainer\Driver;
 
+use GuzzleHttp\Client;
+use GuzzleHttp\ClientInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\Definition;
 use Throwable;
@@ -69,7 +71,7 @@ class GoutteFactory implements DriverFactory
             );
         }
 
-        if ($this->isGuzzle6()) {
+        if ($this->isGuzzle6Or7()) {
             $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client');
 
             return new Definition('Behat\Mink\Driver\GoutteDriver', array($clientDefinition));
@@ -129,9 +131,17 @@ class GoutteFactory implements DriverFactory
         return false;
     }
 
-    private function isGuzzle6()
+    private function isGuzzle6Or7()
     {
+        $version = 0;
+
+        if (defined('\GuzzleHttp\ClientInterface::VERSION')) {
+            $version = 6;
+        } elseif (method_exists(Client::class, 'sendRequest')) {
+            $version = 7;
+        }
+
         return interface_exists('GuzzleHttp\ClientInterface') &&
-            version_compare(\GuzzleHttp\ClientInterface::VERSION, '6.0.0', '>=');
+            ($version === 6 || $version === 7);
     }
 }
