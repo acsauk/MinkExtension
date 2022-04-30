@@ -69,10 +69,14 @@ class GoutteFactory implements DriverFactory
             );
         }
 
+        if ($this->isGuzzle6()) {
+            $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client');
+
+            return new Definition('Behat\Mink\Driver\GoutteDriver', array($clientDefinition));
+        }
+
         if ($this->isGoutte1()) {
             $guzzleClient = $this->buildGuzzle3Client($config['guzzle_parameters']);
-        } elseif ($this->isGuzzle6()) {
-            $guzzleClient = $this->buildGuzzle6Client($config['guzzle_parameters']);
         } else {
             $guzzleClient = $this->buildGuzzle4Client($config['guzzle_parameters']);
         }
@@ -115,11 +119,7 @@ class GoutteFactory implements DriverFactory
 
     private function isGoutte1()
     {
-        try {
-            $refl = new \ReflectionParameter(array('Goutte\Client', 'setClient'), 0);
-        } catch (Throwable $e) {
-            return false;
-        }
+        $refl = new \ReflectionParameter(array('Goutte\Client', 'setClient'), 0);
 
         $type = $refl->getType();
         if ($type instanceof \ReflectionNamedType && 'Guzzle\Http\ClientInterface' === $type->getName()) {
