@@ -72,7 +72,11 @@ class GoutteFactory implements DriverFactory
         }
 
         if ($this->isGuzzle6Or7()) {
-            $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client');
+            $guzzleClient = $this->buildGuzzle7Client($config['guzzle_parameters']);
+
+            $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client', [$config['server_parameters']]);
+
+            $clientDefinition->addArgument($guzzleClient);
 
             return new Definition('Behat\Mink\Driver\GoutteDriver', array($clientDefinition));
         }
@@ -91,6 +95,15 @@ class GoutteFactory implements DriverFactory
         return new Definition('Behat\Mink\Driver\GoutteDriver', array(
             $clientDefinition,
         ));
+    }
+
+    private function buildGuzzle7Client(array $parameters)
+    {
+        // Force the parameters set by default in Goutte to reproduce its behavior
+        $parameters['allow_redirects'] = false;
+        $parameters['cookies'] = true;
+
+        return new Definition('GuzzleHttp\Client', array($parameters));
     }
 
     private function buildGuzzle6Client(array $parameters)
