@@ -14,6 +14,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\ClientInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\Definition;
+use Symfony\Component\DependencyInjection\Reference;
 use Throwable;
 
 /**
@@ -72,11 +73,11 @@ class GoutteFactory implements DriverFactory
         }
 
         if ($this->isGuzzle6Or7()) {
-            $guzzleClient = $this->buildGuzzle7Client($config['guzzle_parameters']);
+            $httpClient = $this->buildSymfonyHttpClient($config['guzzle_parameters']);
 
             $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client', [$config['server_parameters']]);
 
-            $clientDefinition->addArgument($guzzleClient);
+            $clientDefinition->addArgument($httpClient);
 
             return new Definition('Behat\Mink\Driver\GoutteDriver', array($clientDefinition));
         }
@@ -97,13 +98,13 @@ class GoutteFactory implements DriverFactory
         ));
     }
 
-    private function buildGuzzle7Client(array $parameters)
+    private function buildSymfonyHttpClient(array $parameters)
     {
         // Force the parameters set by default in Goutte to reproduce its behavior
         $parameters['allow_redirects'] = false;
         $parameters['cookies'] = true;
 
-        return new Definition('GuzzleHttp\Client', array($parameters));
+        return new Definition('Symfony\Component\HttpClient\HttpClient', array($parameters));
     }
 
     private function buildGuzzle6Client(array $parameters)
