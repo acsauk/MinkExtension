@@ -10,12 +10,8 @@
 
 namespace Behat\MinkExtension\ServiceContainer\Driver;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\ClientInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\Definition;
-use Symfony\Component\DependencyInjection\Reference;
-use Throwable;
 
 /**
  * @author Christophe Coevoet <stof@notk.org>
@@ -72,18 +68,10 @@ class GoutteFactory implements DriverFactory
             );
         }
 
-        if ($this->isGuzzle6Or7()) {
-            $httpClient = $this->buildSymfonyHttpClient($config['guzzle_parameters']);
-
-            $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client', [$config['server_parameters']]);
-
-            $clientDefinition->addArgument($httpClient);
-
-            return new Definition('Behat\Mink\Driver\GoutteDriver', array($clientDefinition));
-        }
-
         if ($this->isGoutte1()) {
             $guzzleClient = $this->buildGuzzle3Client($config['guzzle_parameters']);
+        } elseif ($this->isGuzzle6()) {
+            $guzzleClient = $this->buildGuzzle6Client($config['guzzle_parameters']);
         } else {
             $guzzleClient = $this->buildGuzzle4Client($config['guzzle_parameters']);
         }
@@ -96,15 +84,6 @@ class GoutteFactory implements DriverFactory
         return new Definition('Behat\Mink\Driver\GoutteDriver', array(
             $clientDefinition,
         ));
-    }
-
-    private function buildSymfonyHttpClient(array $parameters)
-    {
-        // Force the parameters set by default in Goutte to reproduce its behavior
-        $parameters['allow_redirects'] = false;
-        $parameters['cookies'] = true;
-
-        return new Definition('Symfony\Component\HttpClient\HttpClient', array($parameters));
     }
 
     private function buildGuzzle6Client(array $parameters)
@@ -145,17 +124,9 @@ class GoutteFactory implements DriverFactory
         return false;
     }
 
-    private function isGuzzle6Or7()
+    private function isGuzzle6()
     {
-        $version = 0;
-
-        if (defined('\GuzzleHttp\ClientInterface::VERSION')) {
-            $version = 6;
-        } elseif (method_exists(Client::class, 'sendRequest')) {
-            $version = 7;
-        }
-
         return interface_exists('GuzzleHttp\ClientInterface') &&
-            ($version === 6 || $version === 7);
+            version_compare(\GuzzleHttp\ClientInterface::VERSION, '6.0.0', '>=');
     }
 }
