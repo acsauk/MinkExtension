@@ -51,6 +51,7 @@ class MinkExtension implements ExtensionInterface
     public function __construct()
     {
         $this->registerDriverFactory(new GoutteFactory());
+        $this->registerDriverFactory(new BrowserKitFactory());
         $this->registerDriverFactory(new SahiFactory());
         $this->registerDriverFactory(new SeleniumFactory());
         $this->registerDriverFactory(new Selenium2Factory());
