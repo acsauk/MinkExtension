@@ -67,8 +67,13 @@ class BrowserKitFactory implements DriverFactory
 
         $parameters = $config['http_client_parameters'] ?? [];
 
+        $httpClientDefinition = new Definition(HttpClient::class);
+        $httpClientDefinition->addMethodCall('create', $parameters);
+
         return new Definition(BrowserKitDriver::class, [
-            new Definition(HttpBrowser::class, $parameters),
+            new Definition(HttpBrowser::class, [
+                $httpClientDefinition
+            ]),
             '%mink.base_url%',
         ]);
     }
