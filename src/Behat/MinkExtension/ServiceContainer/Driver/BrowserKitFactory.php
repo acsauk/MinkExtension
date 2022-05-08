@@ -65,7 +65,7 @@ class BrowserKitFactory implements DriverFactory
             throw new \RuntimeException(sprintf('Class %s not found, did you install symfony/browser-kit 4.4+?', HttpBrowser::class));
         }
 
-        $parameters = $config['http_client_parameters'] ?? [];
+        $parameters['$defaultOptions'] = $config['http_client_parameters'] ?? [];
 
         $httpClientDefinition = new Definition(HttpClient::class);
         $httpClientDefinition->addMethodCall('create', $parameters);
