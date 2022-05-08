@@ -13,7 +13,7 @@ use Behat\Mink\Driver\BrowserKitDriver;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\BrowserKit\HttpBrowser;
-use Symfony\Contracts\HttpClient\HttpClient;
+use Symfony\Component\HttpClient\NativeHttpClient;
 
 
 class BrowserKitFactory implements DriverFactory
@@ -58,8 +58,8 @@ class BrowserKitFactory implements DriverFactory
         if (!class_exists(BrowserKitDriver::class)) {
             throw new \RuntimeException('Install behat/mink-browserkit-driver in order to use the browserkit_http driver.');
         }
-        if (!class_exists(HttpClient::class)) {
-            throw new \RuntimeException(sprintf('Class %s not found, did you install symfony/http-client?', HttpClient::class));
+        if (!class_exists(NativeHttpClient::class)) {
+            throw new \RuntimeException(sprintf('Class %s not found, did you install symfony/http-client?', NativeHttpClient::class));
         }
         if (!class_exists(HttpBrowser::class)) {
             throw new \RuntimeException(sprintf('Class %s not found, did you install symfony/browser-kit 4.4+?', HttpBrowser::class));
@@ -67,7 +67,7 @@ class BrowserKitFactory implements DriverFactory
 
         $parameters['$defaultOptions'] = $config['http_client_parameters'] ?? [];
 
-        $httpClientDefinition = new Definition(HttpClient::class);
+        $httpClientDefinition = new Definition(NativeHttpClient::class);
         $httpClientDefinition->addMethodCall('create', $parameters);
 
         return new Definition(BrowserKitDriver::class, [
