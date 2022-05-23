@@ -41,18 +41,18 @@ class GoutteFactory implements DriverFactory
     {
         $builder
             ->children()
-                ->arrayNode('server_parameters')
-                    ->useAttributeAsKey('key')
-                    ->prototype('variable')->end()
-                ->end()
-                ->arrayNode('guzzle_parameters')
-                    ->useAttributeAsKey('key')
-                    ->prototype('variable')->end()
-                    ->info(
-                        "For Goutte 1.x, these are the second argument of the Guzzle3 client constructor.\n".
-                        'For Goutte 2.x, these are the elements passed in the "defaults" key of the Guzzle4 config.'
-                    )
-                ->end()
+            ->arrayNode('server_parameters')
+            ->useAttributeAsKey('key')
+            ->prototype('variable')->end()
+            ->end()
+            ->arrayNode('guzzle_parameters')
+            ->useAttributeAsKey('key')
+            ->prototype('variable')->end()
+            ->info(
+                "For Goutte 1.x, these are the second argument of the Guzzle3 client constructor.\n".
+                'For Goutte 2.x, these are the elements passed in the "defaults" key of the Guzzle4 config.'
+            )
+            ->end()
             ->end()
         ;
     }
@@ -68,18 +68,32 @@ class GoutteFactory implements DriverFactory
             );
         }
 
-        if ($this->isGuzzle6()) {
-            $guzzleClient = $this->buildGuzzle6Client($config['guzzle_parameters']);
-        } elseif ($this->isGoutte1()  ) {
+        $clientArguments = array(
+            $config['server_parameters'],
+        );
+        $guzzleClient = null;
+
+        if ($this->isGoutte4()) {
+            $clientArguments = array();
+
+            if (class_exists('Symfony\Component\HttpClient\HttpClient')) {
+                $clientArguments = array(
+                    \Symfony\Component\HttpClient\HttpClient::create($config['server_parameters'])
+                );
+            }
+        } elseif ($this->isGoutte1()) {
             $guzzleClient = $this->buildGuzzle3Client($config['guzzle_parameters']);
+        } elseif ($this->isGuzzle6()) {
+            $guzzleClient = $this->buildGuzzle6Client($config['guzzle_parameters']);
         } else {
             $guzzleClient = $this->buildGuzzle4Client($config['guzzle_parameters']);
         }
 
-        $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client', array(
-            $config['server_parameters'],
-        ));
-        $clientDefinition->addMethodCall('setClient', array($guzzleClient));
+        $clientDefinition = new Definition('Behat\Mink\Driver\Goutte\Client', $clientArguments);
+
+        if (null !== $guzzleClient) {
+            $clientDefinition->addMethodCall('setClient', array($guzzleClient));
+        }
 
         return new Definition('Behat\Mink\Driver\GoutteDriver', array(
             $clientDefinition,
@@ -110,6 +124,13 @@ class GoutteFactory implements DriverFactory
         $parameters['redirect.disable'] = true;
 
         return new Definition('Guzzle\Http\Client', array(null, $parameters));
+    }
+
+    private function isGoutte4()
+    {
+        $client = 'Goutte\Client';
+
+        return class_exists($client) && is_a($client, 'Symfony\Component\BrowserKit\HttpBrowser', true);
     }
 
     private function isGoutte1()
